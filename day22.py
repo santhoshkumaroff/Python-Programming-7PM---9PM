@@ -43,6 +43,7 @@ def strong(n):
         sum+=fact(int(i))
     return n==sum
 print(strong(10))
+
 '''
 step 1 :
 def fact(5):
