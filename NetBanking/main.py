@@ -28,9 +28,87 @@ conn = sqlite3.connect('mydb.db')
 # conn.execute(f'''update AccountDetails set bank_balance ="{amount}" where username ="nadim@gmail.com"''')
 # conn.commit()
 
+#netbanking 
+def netbanking(userdetails,username):
+    receiver_username = input("Enter receiver username : ")
+    allusernames = list(conn.execute('''select username from AccountDetails'''))
+    allusernames = [i[0] for i in allusernames]
+    print(allusernames)
+    if receiver_username in allusernames:
+        print("Validate successful")
+        while True:
+            amount = int(input("Enter amount : "))
+            if 0<=amount<=10000:
+                print("validate")
+                sender_balance = list(conn.execute(f'''select bank_balance from AccountDetails where username = "{username}"'''))[0][0]
+                receiver_balance = list(conn.execute(f'''select bank_balance from AccountDetails where username = "{receiver_username}"'''))[0][0]    
+                if amount<=sender_balance:
+                    # print("Validate")
+                    sender_balance-=amount
+                    receiver_balance+=amount
+                    conn.execute(f'''update AccountDetails set bank_balance = "{sender_balance}" where username = "{username}"''')
+                    conn.commit()
+                    conn.execute(f'''update AccountDetails set bank_balance = "{receiver_balance}" where username = "{receiver_username}"''')
+                    conn.commit()
+                    checkbalance(userdetails,username)
+                    break
+                else:
+                    print("Not having enough balance")
+            else:
+                print("Invalid amount ❌❌❌")
+    else:
+        print("Username is not available")
+        netbanking(userdetails,username)
+
+
+#deposit
+def deposit(userdetails,username):
+    amount = int(input("Enter amount : "))
+    if 0<=amount<=10000:
+        print("Range valid")
+        #santhosh@gmail.com
+        old_balance = list(conn.execute(f'''select bank_balance from AccountDetails where username = "{username}"'''))[0][0]
+        while True:
+            g_otp = random.randint(1000,9999)
+            u_otp = int(input(f"OTP : {g_otp}\nEnter your OTP : "))
+            if g_otp == u_otp:
+                print("OTP Matching ...")
+                old_balance+=amount
+                conn.execute(f'''update AccountDetails set bank_balance = "{old_balance}" where username = "{username}"''')
+                conn.commit()
+                checkbalance(userdetails,username)
+                option = int(input("Enter 1 to Back menu : "))
+                while True:
+                    if option ==1:
+                        showfeatures(userdetails,username)
+                        break
+                    else:
+                        print("Invalid Option")
+                break
+            else:
+                print("Invalid OTP")
+    else:
+        print("Out of range ❌❌")
+        deposit(userdetails,username)
+
+#check balance
+def checkbalance(userdetails,username):
+    #method 1
+    balance = list(conn.execute(f'''select bank_balance from AccountDetails where username = "{username}"'''))[0][0]
+    print(f"Current Balance is : {balance}")
+    option = int(input("Enter 1 to Back menu : "))
+    while True:
+        if option ==1:
+            showfeatures(userdetails,username)
+            break
+        else:
+            print("Invalid Option")
+    # method 2
+    # print(f"Current Balance : {userdetails[-2]}")
+
 
 #showProfile
-def showprofile(userdetails):
+def showprofile(userdetails,username):
     # print(userdetails)
     print("Profile Details 👇👇👇")
     print("----------------------------")
@@ -38,7 +116,7 @@ def showprofile(userdetails):
     while True:
         option = int(input("Enter 1 for back to show features : "))
         if option==1:
-            showfeatures(userdetails)
+            showfeatures(userdetails,username)
             break
         else:
             print("Invalid Option..")
@@ -46,24 +124,27 @@ def showprofile(userdetails):
 
 
 #showfeatures 
-def showfeatures(userdetails):
+def showfeatures(userdetails,username):
     print("1. Net Banking\n2. Show Profile\n3. Deposit\n4. Check Balance\n5. Exit")
     option = int(input("Enter Correct Option : "))
     match option:
         case 1:
-            print("NetBanking")
+            # print("NetBanking")
+            netbanking(userdetails,username)
         case 2:
             # print("Show Profile")
-            showprofile(userdetails)
+            showprofile(userdetails,username)
         case 3:
-            print("Deposit")
+            # print("Deposit")
+            deposit(userdetails,username)
         case 4:
-            print("Check Balance")
+            # print("Check Balance")
+            checkbalance(userdetails,username)
         case 5:
             return 0
         case _:
             print("Invalid Option ❌❌❌")
-            showfeatures()
+            showfeatures(userdetails,username)
 #check user password
 def checkuserpassword(username):
     print(f'Username : {username}')
@@ -73,7 +154,7 @@ def checkuserpassword(username):
         print("Login Successful ✅✅✅")
         userdetails = list(conn.execute(f'''select * from AccountDetails where username ="{username}"'''))
         userdetails = [i for i in userdetails[0]]
-        showfeatures(userdetails)
+        showfeatures(userdetails,username)
     else:
         print("Incorrect Password")
         checkuserpassword(username)
